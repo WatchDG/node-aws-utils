@@ -3,7 +3,7 @@ import {DynamoDB} from "aws-sdk";
 
 export class DynamoDocumentClient {
     @tryCatchWrapperAsync
-    static async update(client: DynamoDB.DocumentClient, tableName: DynamoDB.DocumentClient.TableName, where: DynamoDB.DocumentClient.Key, data: DynamoDB.DocumentClient.AttributeUpdates): Promise<ResultOK<DynamoDB.DocumentClient.AttributeMap> | ResultFAIL<Error>> {
+    static async update(client: DynamoDB.DocumentClient, tableName: DynamoDB.DocumentClient.TableName, where: DynamoDB.DocumentClient.Key, data: { [key: string]: any }): Promise<ResultOK<DynamoDB.DocumentClient.AttributeMap> | ResultFAIL<Error>> {
         const params: DynamoDB.DocumentClient.UpdateItemInput = {
             TableName: tableName,
             Key: where,
