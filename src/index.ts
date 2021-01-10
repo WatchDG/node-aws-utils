@@ -29,26 +29,26 @@ export class DynamoDocumentClient {
       AttributeUpdates: {},
       ReturnValues: 'UPDATED_NEW'
     };
+    const attributes: DynamoDB.DocumentClient.AttributeUpdates = {};
     const keys = Object.keys(data);
     if (keys.length > 0) {
-      params.AttributeUpdates!['updatedAt'] = {
-        Action: 'PUT',
-        Value: new Date().toUTCString()
-      };
       for (const key of keys) {
         if (data[key]) {
-          params.AttributeUpdates![key] = {
+          attributes[key] = {
             Action: 'PUT',
             Value: data[key]
           };
         } else {
-          params.AttributeUpdates![key] = {
+          attributes[key] = {
             Action: 'DELETE'
           };
         }
       }
+      params.AttributeUpdates = attributes;
       const { Attributes } = await client.update(params).promise();
-      return ResultOk(Attributes!);
+      if (Attributes) {
+        return ResultOk(Attributes);
+      }
     }
     return ResultOk({});
   }
