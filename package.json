@@ -12,21 +12,33 @@
     "email": "baranov@w3m.co"
   },
   "repository": "github:WatchDG/node-aws-utils",
+  "private": false,
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
   "scripts": {
-    "preversion": "npm run build",
-    "version": "npm run build",
-    "prepublishOnly": "npm run build",
-    "prepare": "npm run build",
-    "build": "npx tsc"
+    "fmt": "npx prettier --write \"src/**/*.ts\"",
+    "lint": "eslint --ext=ts src",
+    "build": "npx tsc",
+    "postinstall": "husky install",
+    "prepublishOnly": "pinst --disable",
+    "prepare": "npm run lint && npm run build",
+    "postpublish": "pinst --enable"
   },
   "dependencies": {
     "aws-sdk": "^2.822.0",
-    "node-result": "^5.5.0"
+    "node-result": "^6.0.1"
   },
   "devDependencies": {
     "@types/node": "^14.14.20",
+    "@typescript-eslint/eslint-plugin": "^4.12.0",
+    "@typescript-eslint/parser": "^4.12.0",
+    "eslint": "^7.17.0",
+    "husky": "^5.0.6",
+    "pinst": "^2.1.1",
+    "prettier": "^2.2.1",
     "typescript": "^4.1.3"
   }
 }
