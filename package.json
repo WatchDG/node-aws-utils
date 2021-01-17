@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.822.0",
-    "node-result": "^6.0.1"
+    "node-result": "^8.0.0"
   },
   "devDependencies": {
     "@types/node": "^14.14.20",
