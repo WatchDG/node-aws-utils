@@ -68,7 +68,7 @@ export class DynamoDocumentClient {
     const keys = Object.keys(data);
     if (keys.length > 0) {
       for (const key of keys) {
-        if (data[key]) {
+        if (data[key] !== void 0) {
           attributes[key] = {
             Action: 'PUT',
             Value: data[key]
