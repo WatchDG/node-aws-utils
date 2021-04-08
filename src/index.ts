@@ -14,7 +14,10 @@ export class DynamoDocumentClient {
       consistent?: boolean;
       capacity?: DynamoDB.DocumentClient.ReturnConsumedCapacity;
     } = {}
-  ): TResultAsync<DynamoDB.DocumentClient.AttributeMap | null, Error> {
+  ): TResultAsync<
+    { item: DynamoDB.DocumentClient.AttributeMap | null; capacity: DynamoDB.DocumentClient.ConsumedCapacity | null },
+    Error
+  > {
     const params: DynamoDB.DocumentClient.GetItemInput = {
       TableName: tableName,
       Key: where
