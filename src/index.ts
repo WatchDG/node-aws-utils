@@ -1,22 +1,25 @@
-import { ResultOk, tryCatchWrapperAsync, ReturningResultAsync } from 'node-result';
-import { DynamoDB } from 'aws-sdk';
+import { ok, tryCatchAsync } from 'node-result';
+import type { TResultAsync } from 'node-result';
+import type { DynamoDB } from 'aws-sdk';
 
 export class DynamoDocumentClient {
-  @tryCatchWrapperAsync
+  @tryCatchAsync
   static async get(
     client: DynamoDB.DocumentClient,
     tableName: DynamoDB.DocumentClient.TableName,
-    where: DynamoDB.DocumentClient.Key
-  ): ReturningResultAsync<DynamoDB.DocumentClient.AttributeMap | null, Error> {
+    where: DynamoDB.DocumentClient.Key,
+    options: { fields?: string[] } = {}
+  ): TResultAsync<DynamoDB.DocumentClient.AttributeMap | null, Error> {
     const params: DynamoDB.DocumentClient.GetItemInput = {
       TableName: tableName,
       Key: where
     };
+    if (options.fields) params.ProjectionExpression = options.fields.join(',');
     const { Item } = await client.get(params).promise();
-    return ResultOk(Item || null);
+    return ok(Item || null);
   }
 
-  @tryCatchWrapperAsync
+  @tryCatchAsync
   static async getFromIndex(
     client: DynamoDB.DocumentClient,
     tableName: DynamoDB.DocumentClient.TableName,
@@ -25,7 +28,7 @@ export class DynamoDocumentClient {
       pk: { name: DynamoDB.DocumentClient.AttributeName; value: DynamoDB.DocumentClient.AttributeValue };
       sk?: { name: DynamoDB.DocumentClient.AttributeName; value: DynamoDB.DocumentClient.AttributeValue };
     }
-  ): ReturningResultAsync<DynamoDB.DocumentClient.ItemList | null, Error> {
+  ): TResultAsync<DynamoDB.DocumentClient.ItemList | null, Error> {
     const params: Required<
       Pick<
         DynamoDB.DocumentClient.QueryInput,
@@ -48,16 +51,16 @@ export class DynamoDocumentClient {
       params.ExpressionAttributeValues[':sk'] = where.sk.value;
     }
     const { Items } = await client.query(params).promise();
-    return ResultOk(Items || null);
+    return ok(Items || null);
   }
 
-  @tryCatchWrapperAsync
+  @tryCatchAsync
   static async update(
     client: DynamoDB.DocumentClient,
     tableName: DynamoDB.DocumentClient.TableName,
     where: DynamoDB.DocumentClient.Key,
     data: { [key: string]: unknown }
-  ): ReturningResultAsync<DynamoDB.DocumentClient.AttributeMap, Error> {
+  ): TResultAsync<DynamoDB.DocumentClient.AttributeMap, Error> {
     const params: DynamoDB.DocumentClient.UpdateItemInput = {
       TableName: tableName,
       Key: where,
@@ -67,24 +70,21 @@ export class DynamoDocumentClient {
     const attributes: DynamoDB.DocumentClient.AttributeUpdates = {};
     const keys = Object.keys(data);
     if (keys.length > 0) {
-      for (const key of keys) {
-        if (data[key] !== void 0) {
-          attributes[key] = {
-            Action: 'PUT',
-            Value: data[key]
-          };
-        } else {
-          attributes[key] = {
-            Action: 'DELETE'
-          };
-        }
-      }
+      keys.forEach((key) => {
+        attributes[key] =
+          data[key] !== void 0
+            ? {
+                Action: 'PUT',
+                Value: data[key]
+              }
+            : {
+                Action: 'DELETE'
+              };
+      });
       params.AttributeUpdates = attributes;
       const { Attributes } = await client.update(params).promise();
-      if (Attributes) {
-        return ResultOk(Attributes);
-      }
+      if (Attributes) return ok(Attributes);
     }
-    return ResultOk({});
+    return ok({});
   }
 }
