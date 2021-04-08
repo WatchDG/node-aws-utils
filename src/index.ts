@@ -8,15 +8,23 @@ export class DynamoDocumentClient {
     client: DynamoDB.DocumentClient,
     tableName: DynamoDB.DocumentClient.TableName,
     where: DynamoDB.DocumentClient.Key,
-    options: { fields?: string[] } = {}
+    options: {
+      fields?: string[];
+      fieldsMap?: DynamoDB.DocumentClient.ExpressionAttributeNameMap;
+      consistent?: boolean;
+      capacity?: DynamoDB.DocumentClient.ReturnConsumedCapacity;
+    } = {}
   ): TResultAsync<DynamoDB.DocumentClient.AttributeMap | null, Error> {
     const params: DynamoDB.DocumentClient.GetItemInput = {
       TableName: tableName,
       Key: where
     };
     if (options.fields) params.ProjectionExpression = options.fields.join(',');
-    const { Item } = await client.get(params).promise();
-    return ok(Item || null);
+    if (options.fieldsMap) params.ExpressionAttributeNames = options.fieldsMap;
+    if (options.consistent) params.ConsistentRead = options.consistent;
+    if (options.capacity) params.ReturnConsumedCapacity = options.capacity;
+    const { Item, ConsumedCapacity } = await client.get(params).promise();
+    return ok({ item: Item || null, capacity: ConsumedCapacity || null });
   }
 
   @tryCatchAsync
