@@ -1,6 +1,7 @@
 import { ok, tryCatchAsync } from 'node-result';
 import type { TResultAsync } from 'node-result';
 import type { DynamoDB } from 'aws-sdk';
+import type { Lambda } from 'aws-sdk';
 
 export class DynamoDocumentClient {
   @tryCatchAsync
@@ -97,5 +98,28 @@ export class DynamoDocumentClient {
       if (Attributes) return ok(Attributes);
     }
     return ok({});
+  }
+}
+
+export class LambdaInvoker {
+  @tryCatchAsync
+  static async invoke(
+    lambda: Lambda,
+    functionName: string,
+    payload: string
+  ): TResultAsync<Record<string, unknown>, Error> {
+    const {
+      $response: { data, error }
+    } = await lambda
+      .invoke({
+        FunctionName: functionName,
+        Payload: payload
+      })
+      .promise();
+    if (error) throw error;
+    if (!data) throw new Error('Lambda without reply!');
+    if (!data.Payload) throw new Error('Lambda without response!');
+    const response = JSON.parse(data.Payload.toString());
+    return ok(response);
   }
 }
